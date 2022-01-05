@@ -1,0 +1,29 @@
+﻿@using Chat.Domain.Services.Abstractions
+@using Chat.Domain.Domains
+@inject IMessageService MessageService
+
+<div class="form-group">
+    <p>@Username</p>
+    <label>
+        Message:
+        <input type="text" @bind="_content" />
+    </label>
+</div>
+<button @onclick="Send">Send</button>
+
+
+@code  {
+    private string _content;
+
+    [Parameter]
+    public string Username { get; set; }
+
+    private async Task Send()
+    {
+        await MessageService.CreateMessageAsync(new Message
+        {
+            Username = Username,
+            Content = _content
+        });
+    }
+}

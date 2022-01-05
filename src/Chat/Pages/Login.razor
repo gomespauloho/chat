@@ -1,0 +1,26 @@
+﻿@page "/login"
+
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@inject ProtectedSessionStorage ProtectedSessionStore
+@inject NavigationManager NavManager
+
+<div class="text-center">
+
+    <h1 class="display-4">Please login to use the chat</h1>
+
+    <div>
+        <input type="text" @bind="_username" />
+        <button @onclick="Send">Login</button>
+    </div>
+</div>
+
+@code {
+    private string _username;
+
+    private async Task Send()
+    {
+        await ProtectedSessionStore.SetAsync("username", _username);
+
+        NavManager.NavigateTo("/");
+    }
+}

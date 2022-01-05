@@ -1,0 +1,54 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@inject ProtectedSessionStorage ProtectedSessionStore
+@inject NavigationManager NavManager
+
+
+@if (isConnected)
+{
+    <button @onclick="Logout">Logout</button>
+    <SendMessage Username="@_username" />
+    <ChatRoom />
+}
+else
+{
+    <p>Loading...</p>
+}
+
+@code {
+    private string _username;
+    private bool isConnected;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        isConnected = true;
+
+        await LoadStateAsync();
+
+        if (!string.IsNullOrWhiteSpace(_username))
+            StateHasChanged();
+
+    }
+
+    private async Task LoadStateAsync()
+    {
+        var result = await ProtectedSessionStore.GetAsync<string>("username");
+
+        if (!result.Success)
+        {
+            NavManager.NavigateTo("/login");
+            return;
+        }
+
+        _username = result.Value;
+    }
+
+    private async Task Logout()
+    {
+        await ProtectedSessionStore.DeleteAsync("username");
+        NavManager.NavigateTo("/login");
+    }
+}

@@ -1,0 +1,50 @@
+﻿@using Microsoft.AspNetCore.SignalR.Client
+@using Chat.Domain.Domains
+@using Chat.Domain.Services.Abstractions 
+
+@inject NavigationManager NavigationManager
+@inject IMessageService MessageService
+
+@implements IAsyncDisposable
+
+<div class="text-center">
+    <div>
+        @foreach (var message in _messages)
+        {
+            <p>@message.Username - @message.CreatedAt: @message.Content</p>
+        }
+    </div>
+</div>
+
+@code  {
+    private HubConnection hubConnection;
+    private IList<Message> _messages = new List<Message>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavigationManager.ToAbsoluteUri("/chathub"))
+            .Build();
+
+        hubConnection.On<Message>("ReceiveMessage", (message) =>
+        {
+            _messages.Add(message);
+            StateHasChanged();
+        });
+
+        await hubConnection.StartAsync();
+
+        _messages = (await MessageService.GetMessagesAsync()).ToList();
+    }
+
+    public bool IsConnected =>
+        hubConnection?.State == HubConnectionState.Connected;
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
+}
